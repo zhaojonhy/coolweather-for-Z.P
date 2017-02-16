@@ -1,5 +1,7 @@
 package com.zhaojonhy.coolweather.gson;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * Created by Administrator on 2017/2/15.
  */
@@ -74,15 +76,16 @@ public class Basic {
          * utc : 2017-02-15 01:52
          */
 
-        private String loc;
+        @SerializedName("loc")
+        private String updataTime;
         private String utc;
 
-        public String getLoc() {
-            return loc;
+        public String getUpdataTime() {
+            return updataTime;
         }
 
-        public void setLoc(String loc) {
-            this.loc = loc;
+        public void setUpdataTime(String updataTime) {
+            this.updataTime = updataTime;
         }
 
         public String getUtc() {

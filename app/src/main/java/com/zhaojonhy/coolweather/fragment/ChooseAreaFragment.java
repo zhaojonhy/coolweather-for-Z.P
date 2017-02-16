@@ -2,6 +2,7 @@ package com.zhaojonhy.coolweather.fragment;
 
 import android.app.Fragment;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,8 +15,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.zhaojonhy.coolweather.MainActivity;
+import com.zhaojonhy.coolweather.activity.MainActivity;
 import com.zhaojonhy.coolweather.R;
+import com.zhaojonhy.coolweather.activity.WeatherActivity;
 import com.zhaojonhy.coolweather.db.City;
 import com.zhaojonhy.coolweather.db.County;
 import com.zhaojonhy.coolweather.db.Province;
@@ -105,6 +107,13 @@ public class ChooseAreaFragment extends Fragment {
                     selectedCity = cityList.get(position) ;
                     //查询县市
                     queryCounties() ;
+                }else if(currentLevel == LEVEL_COUNTY){
+                    //如果是县级选择的话，则跳如天气界面，传入weather_id
+                    String weatherId = countyList.get(position).getWeatherId() ;
+                    Intent intent = new Intent(activity, WeatherActivity.class) ;
+                    intent.putExtra("weather_id",weatherId) ;
+                    startActivity(intent) ;
+                    activity.finish() ;
                 }
             }
         });

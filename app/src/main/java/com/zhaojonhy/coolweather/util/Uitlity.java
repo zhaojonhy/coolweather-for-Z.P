@@ -3,9 +3,11 @@ package com.zhaojonhy.coolweather.util;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.google.gson.Gson;
 import com.zhaojonhy.coolweather.db.City;
 import com.zhaojonhy.coolweather.db.County;
 import com.zhaojonhy.coolweather.db.Province;
+import com.zhaojonhy.coolweather.gson.Weather;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -107,5 +109,23 @@ public class Uitlity {
         return false ;
     }
 
+    /*
+    *  解析天气JSON数据的方法，将返回的JSON数据解析成Weather类
+    * */
+
+    public static Weather handleWeatherResponse(final String response){
+        try{
+            JSONObject jsonObject = new JSONObject(response) ;
+            //得到的是一个HeWeather5的集合，
+            // 也可以再增加一个实体类HeWeather5，里面声明一个List<HeWeather5> HeWeather5 的集合，用HeWeather5.getHeWeather5.get(0)
+            //来获取Weather实例
+            JSONArray jsonArray = jsonObject.getJSONArray("HeWeather5") ;
+            String weatherContent = jsonArray.getJSONObject(0).toString() ;//获取集合Weather的Json数据
+            return new Gson().fromJson(weatherContent,Weather.class) ;
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null ;
+    }
 }
 
