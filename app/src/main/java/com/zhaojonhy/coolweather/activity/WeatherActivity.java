@@ -2,15 +2,20 @@ package com.zhaojonhy.coolweather.activity;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.zhaojonhy.coolweather.R;
 import com.zhaojonhy.coolweather.gson.DailyForecast;
 import com.zhaojonhy.coolweather.gson.Weather;
@@ -29,6 +34,7 @@ import okhttp3.Response;
  */
 public class WeatherActivity extends Activity {
 
+    private final static String TAG = WeatherActivity.class.getSimpleName() ;
     private final static String API_SERVER = "https://free-api.heweather.com/v5/weather?" ;
     private final static String APP_KEY = "key=3937d0e7db0c4458ba147dd466f96ed2" ;
 
@@ -49,16 +55,22 @@ public class WeatherActivity extends Activity {
     private TextView comfortText ;
     private TextView carWashText ;
     private TextView sportText ;
+    //必应背景图
+    private ImageView bingPicImg ;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //将背景图和状态栏融合在一起
+        decorStatusBar() ;
         setContentView(R.layout.activi_weather);
         //初始化各个控件
         initView() ;
         //判断是否第一次进入此天气页面
-
+        isFirstReadServicer() ;
+        //判断是否要加载必应图，如果事先有缓存则加载，没有则去必应获取
+        isloadBingPic() ;
     }
 
     private void initView(){
@@ -73,6 +85,7 @@ public class WeatherActivity extends Activity {
         comfortText = (TextView) findViewById(R.id.comfort_text) ;
         carWashText =  (TextView) findViewById(R.id.car_wash_text) ;
         sportText = (TextView) findViewById(R.id.sport_text) ;
+        bingPicImg = (ImageView) findViewById(R.id.bing_pic_img) ;
     }
 
     private void isFirstReadServicer(){
@@ -97,11 +110,13 @@ public class WeatherActivity extends Activity {
     /*
     *  根据weatherId查询服务器上的天气信息，并存入本地
     * */
-    private void requestWeather(String weatherId) {
+    private void requestWeather(final String weatherId) {
 
         String weatherUrl = API_SERVER
                 +"city="+weatherId
-                +"&key="+APP_KEY ;
+                +"&"+APP_KEY ;
+
+        Log.d(TAG,"weatherUrl " + weatherUrl ) ;
 
         HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
             @Override
@@ -114,6 +129,7 @@ public class WeatherActivity extends Activity {
                     public void run() {
                         Toast.makeText(WeatherActivity.this,"获取天气信息失败",
                                 Toast.LENGTH_SHORT).show() ;
+                        Log.d(TAG,"failed " + "response失败" ) ;
                     }
                 });
             }
@@ -128,6 +144,7 @@ public class WeatherActivity extends Activity {
                     @Override
                     public void run() {
                         //如果weather不为空且请求服务器成功（status为"ok"），则进行UI操作
+                        Log.d(TAG,"weather.getStatus()" + weather.getStatus() ) ;
                         if( weather != null && "ok".equals(weather.getStatus()) ){
                             //用来写入存储的数据
                             SharedPreferences.Editor editor = PreferenceManager.
@@ -141,11 +158,15 @@ public class WeatherActivity extends Activity {
                         }else {
                             Toast.makeText(WeatherActivity.this,"获取天气信息失败",
                                     Toast.LENGTH_SHORT).show() ;
+                            Log.d(TAG,"failed " + "failed" ) ;
                         }
                     }
                 });
             }
         });
+
+        //数据请求成功加载必应图片
+        loadBingPic();
     }
 
     /*
@@ -196,6 +217,62 @@ public class WeatherActivity extends Activity {
         carWashText.setText(carWash) ;
         sportText.setText(sport) ;
         forecastLayout.setVisibility(View.VISIBLE);
+    }
+
+
+    private void isloadBingPic() {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this) ;
+        String bingPic = sp.getString("bing_pic",null) ;
+        if( bingPic != null ){
+            Glide.with(this).load(bingPic).into(bingPicImg) ; //图片加载库
+        }else {
+            //无缓存时请求网络
+            loadBingPic();
+        }
+    }
+
+    /*
+    *  加载必应每日一图
+    * */
+    private void loadBingPic() {
+        String requestBingPIc = "http://guolin.tech/api/bing_pic" ;
+        HttpUtil.sendOkHttpRequest(requestBingPIc, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                final String bingPic = response.body().string() ;
+                //储存地址
+                SharedPreferences.Editor editor = PreferenceManager.
+                        getDefaultSharedPreferences(WeatherActivity.this).
+                        edit() ;
+                editor.putString("bing_pic",bingPic) ;
+                editor.apply() ;
+                //更新到主线程上
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Glide.with(WeatherActivity.this).load(bingPic).into(bingPicImg) ;
+                    }
+                });
+            }
+        });
+    }
+
+    /*
+    * 将背景图和状态栏融合在一起
+    * */
+    private void decorStatusBar(){
+        //这个功能要Android5.0以及以上的系统才有所以要判断版本号
+        if(Build.VERSION.SDK_INT >= 21){
+            View decorView = getWindow().getDecorView() ;
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            |View.SYSTEM_UI_FLAG_LAYOUT_STABLE );
+            getWindow().setStatusBarColor(Color.TRANSPARENT);
+        }
     }
 
 }

@@ -21,7 +21,7 @@ public class MainActivity extends Activity {
         String weather = sp.getString("weather",null) ;
         //如果不是第一次进入则跳转到天气界面（没有则返回null）
         if( weather != null ){
-            Intent intent = new Intent(this, Weather.class) ;
+            Intent intent = new Intent(this, WeatherActivity.class) ;
             startActivity(intent) ;
             finish() ;
         }
