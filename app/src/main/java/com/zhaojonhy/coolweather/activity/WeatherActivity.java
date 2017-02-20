@@ -1,6 +1,7 @@
 package com.zhaojonhy.coolweather.activity;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
@@ -27,6 +28,8 @@ import com.handmark.pulltorefresh.library.PullToRefreshScrollView;
 import com.zhaojonhy.coolweather.R;
 import com.zhaojonhy.coolweather.gson.DailyForecast;
 import com.zhaojonhy.coolweather.gson.Weather;
+import com.zhaojonhy.coolweather.service.AutoUpdateService;
+import com.zhaojonhy.coolweather.util.Constants;
 import com.zhaojonhy.coolweather.util.HttpUtil;
 import com.zhaojonhy.coolweather.util.Uitlity;
 
@@ -43,8 +46,6 @@ import okhttp3.Response;
 public class WeatherActivity extends Activity {
 
     private final static String TAG = WeatherActivity.class.getSimpleName() ;
-    private final static String API_SERVER = "https://free-api.heweather.com/v5/weather?" ;
-    private final static String APP_KEY = "key=3937d0e7db0c4458ba147dd466f96ed2" ;
 
     //侧滑布局
     public DrawerLayout drawLayout ;
@@ -154,9 +155,9 @@ public class WeatherActivity extends Activity {
     * */
     public void requestWeather(final String weatherId) {
 
-        String weatherUrl = API_SERVER
+        String weatherUrl = Constants.API_SERVER
                 +"city="+weatherId
-                +"&"+APP_KEY ;
+                +"&"+Constants.APP_KEY ;
 
         Log.d(TAG,"weatherUrl " + weatherUrl ) ;
 
@@ -262,6 +263,9 @@ public class WeatherActivity extends Activity {
         carWashText.setText(carWash) ;
         sportText.setText(sport) ;
         forecastLayout.setVisibility(View.VISIBLE);
+        //最后在后台更新数据
+        Intent intent = new Intent(this, AutoUpdateService.class) ;
+        startService(intent) ;
     }
 
 
