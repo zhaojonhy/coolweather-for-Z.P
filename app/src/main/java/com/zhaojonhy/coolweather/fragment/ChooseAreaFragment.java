@@ -41,7 +41,7 @@ public class ChooseAreaFragment extends Fragment {
 
     private final static String TAG = ChooseAreaFragment.class.getSimpleName() ;
 
-    private MainActivity activity ;
+//    private MainActivity activity ;
     //定义城市级别
     public static final int LEVEL_PRIVINCE = 0 ;
     public static final int LEVEL_CITY = 1 ;
@@ -73,7 +73,7 @@ public class ChooseAreaFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        activity = (MainActivity) getActivity() ;
+//        activity = (MainActivity) getActivity() ;
     }
 
     //获取控件的实例，并初始化ArrayAdapter作为ListView的适配器
@@ -83,7 +83,7 @@ public class ChooseAreaFragment extends Fragment {
         titleText = (TextView)view.findViewById(R.id.title_text) ;
         backButton = (Button)view.findViewById(R.id.back_button) ;
         listView = (ListView)view.findViewById(R.id.list_view) ;
-        arrayAdapter = new ArrayAdapter<>(activity,android.R.layout.simple_list_item_1,dataList) ;
+        arrayAdapter = new ArrayAdapter<>(getActivity(),android.R.layout.simple_list_item_1,dataList) ;
         listView.setAdapter(arrayAdapter);
         return view ;
     }
@@ -110,10 +110,23 @@ public class ChooseAreaFragment extends Fragment {
                 }else if(currentLevel == LEVEL_COUNTY){
                     //如果是县级选择的话，则跳如天气界面，传入weather_id
                     String weatherId = countyList.get(position).getWeatherId() ;
-                    Intent intent = new Intent(activity, WeatherActivity.class) ;
-                    intent.putExtra("weather_id",weatherId) ;
-                    startActivity(intent) ;
-                    activity.finish() ;
+
+                    //做activity判断,1.如果是在开始进入选择城市时2.已经在天气界面切换城市时
+                    //1.
+                    if(getActivity() instanceof MainActivity){
+
+                        Intent intent = new Intent(getActivity(), WeatherActivity.class) ;
+                        intent.putExtra("weather_id",weatherId) ;
+                        startActivity(intent) ;
+                        getActivity().finish() ;
+                    }else if(getActivity() instanceof WeatherActivity) {
+                        //2.
+                        WeatherActivity activity = (WeatherActivity) getActivity() ;
+                        activity.drawLayout.closeDrawers();
+                        activity.swipeRefresh.setRefreshing(true);
+                        activity.requestWeather(weatherId);
+                    }
+
                 }
             }
         });
@@ -265,7 +278,7 @@ public class ChooseAreaFragment extends Fragment {
                     public void run() {
                         Log.d(TAG,"onResponse-->" + "fail !") ;
                         closeProgressDialog();
-                        Toast.makeText(activity,"加载失败..." ,Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(),"加载失败..." ,Toast.LENGTH_SHORT).show();
                     }
                 });
             }

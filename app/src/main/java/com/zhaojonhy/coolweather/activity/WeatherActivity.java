@@ -6,16 +6,24 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.handmark.pulltorefresh.library.PullToRefreshBase;
+import com.handmark.pulltorefresh.library.PullToRefreshListView;
+import com.handmark.pulltorefresh.library.PullToRefreshScrollView;
 import com.zhaojonhy.coolweather.R;
 import com.zhaojonhy.coolweather.gson.DailyForecast;
 import com.zhaojonhy.coolweather.gson.Weather;
@@ -38,6 +46,10 @@ public class WeatherActivity extends Activity {
     private final static String API_SERVER = "https://free-api.heweather.com/v5/weather?" ;
     private final static String APP_KEY = "key=3937d0e7db0c4458ba147dd466f96ed2" ;
 
+    //侧滑布局
+    public DrawerLayout drawLayout ;
+    private Button navButton ;
+
     //可下滑布局
     private ScrollView weatherLayout ;
     //显示城市和更新时间
@@ -57,8 +69,9 @@ public class WeatherActivity extends Activity {
     private TextView sportText ;
     //必应背景图
     private ImageView bingPicImg ;
-
-
+    //下拉刷新
+    public SwipeRefreshLayout swipeRefresh ;
+//    public PullToRefreshScrollView mPullToRefreshScrollView ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,6 +80,8 @@ public class WeatherActivity extends Activity {
         setContentView(R.layout.activi_weather);
         //初始化各个控件
         initView() ;
+        //侧滑
+        drawerLayout() ;
         //判断是否第一次进入此天气页面
         isFirstReadServicer() ;
         //判断是否要加载必应图，如果事先有缓存则加载，没有则去必应获取
@@ -74,6 +89,11 @@ public class WeatherActivity extends Activity {
     }
 
     private void initView(){
+        swipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh) ;
+        swipeRefresh.setColorSchemeResources(R.color.colorOrange);
+
+//        mPullToRefreshScrollView = (PullToRefreshScrollView) findViewById(R.id.pull_refresh) ;
+
         weatherLayout = (ScrollView) findViewById(R.id.weather_layout) ;
         titleCity = (TextView) findViewById(R.id.title_city) ;
         titleUpdataTime = (TextView) findViewById(R.id.title_updata_time) ;
@@ -86,6 +106,10 @@ public class WeatherActivity extends Activity {
         carWashText =  (TextView) findViewById(R.id.car_wash_text) ;
         sportText = (TextView) findViewById(R.id.sport_text) ;
         bingPicImg = (ImageView) findViewById(R.id.bing_pic_img) ;
+
+        //侧滑
+        drawLayout = (DrawerLayout)findViewById(R.id.drawer_layout) ;
+        navButton = (Button) findViewById(R.id.nav_button) ;
     }
 
     private void isFirstReadServicer(){
@@ -93,24 +117,42 @@ public class WeatherActivity extends Activity {
         //在MainActivity中做过判断，下面缓存
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this) ;
         String weatherString = sp.getString("weather",null) ;//有则返回"weather",没有则返回null
+        final String weatherId ;
         //判断"weather"是否有本地缓存
         if( weatherString != null ){
             //有缓存直接解析天气数据
             Weather weather = Uitlity.handleWeatherResponse(weatherString) ;
+            //有缓存时刷新数据获取weatherId（不论是哪里获取的weatherId都是一样的同一个城市的Id）
+            weatherId = weather.getBasic().getId() ;
             showWeatherInfo(weather) ;
         }else {
             //没有缓存从服务器查询天气并储存
-            String weatherId = getIntent().getStringExtra("weather_id") ;
+            weatherId = getIntent().getStringExtra("weather_id") ;
             //显示滑动的控件，天气菜单
             weatherLayout.setVisibility(View.VISIBLE);
             requestWeather(weatherId) ;
         }
+        //下拉刷新
+//        mPullToRefreshScrollView.setOnRefreshListener(new PullToRefreshBase.OnRefreshListener<ScrollView>() {
+//            @Override
+//            public void onRefresh(PullToRefreshBase<ScrollView> refreshView) {
+//                loadBingPic() ;
+//                requestWeather(weatherId);
+//            }
+//        });
+        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                //根据weatherId查询服务器上的天气信息,并存入本地,请求结束停止刷新
+                requestWeather(weatherId);
+            }
+        });
     }
 
     /*
     *  根据weatherId查询服务器上的天气信息，并存入本地
     * */
-    private void requestWeather(final String weatherId) {
+    public void requestWeather(final String weatherId) {
 
         String weatherUrl = API_SERVER
                 +"city="+weatherId
@@ -160,6 +202,9 @@ public class WeatherActivity extends Activity {
                                     Toast.LENGTH_SHORT).show() ;
                             Log.d(TAG,"failed " + "failed" ) ;
                         }
+                        //请求数据结束，停止刷新
+//                        mPullToRefreshScrollView.onRefreshComplete();
+                        swipeRefresh.setRefreshing(false);
                     }
                 });
             }
@@ -273,6 +318,15 @@ public class WeatherActivity extends Activity {
             |View.SYSTEM_UI_FLAG_LAYOUT_STABLE );
             getWindow().setStatusBarColor(Color.TRANSPARENT);
         }
+    }
+
+    private void drawerLayout() {
+        navButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawLayout.openDrawer(GravityCompat.START);
+            }
+        });
     }
 
 }
