@@ -243,7 +243,7 @@ public class WeatherActivity extends Activity {
 
             dataText.setText(forecast.getDate());
             condInfoText.setText(forecast.getCond().getTxt_d());
-            condMaxText.setText(forecast.getTemperature().getMax() + "℃" );
+            condMaxText.setText(forecast.getTemperature().getMin() + "℃" );
             condMinText.setText(forecast.getTemperature().getMax() + "℃" );
 
             forecastLayout.addView(view);
