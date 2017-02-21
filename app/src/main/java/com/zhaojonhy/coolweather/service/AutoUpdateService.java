@@ -69,9 +69,9 @@ public class AutoUpdateService extends Service {
             //有缓存时直接解析天气数据,不是从三级地址中选择id，所以得从缓存中选在天气位置的地址
             Weather weather = Uitlity.handleWeatherResponse(weatherString) ;
             String weatherId = weather.getBasic().getId() ;
-            String weatherUrl = Constants.API_SERVER
+            String weatherUrl  = Constants.API_SERVER
                     +"city="+weatherId
-                    +"&"+Constants.APP_KEY ;
+                    +"&key="+Constants.APP_KEY ;
             HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {

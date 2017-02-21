@@ -4,6 +4,6 @@ package com.zhaojonhy.coolweather.util;
  * Created by Administrator on 2017/2/20.
  */
 public interface Constants {
-    public static final String APP_KEY      = "3180818304";
-    public static final String API_SERVER = "https://free-api.heweather.com/v5/weather?" ;
+    String APP_KEY = "3937d0e7db0c4458ba147dd466f96ed2";
+    String API_SERVER = "https://free-api.heweather.com/v5/weather?" ;
 }

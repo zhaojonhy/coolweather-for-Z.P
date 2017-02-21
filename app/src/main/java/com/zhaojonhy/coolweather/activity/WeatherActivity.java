@@ -157,7 +157,7 @@ public class WeatherActivity extends Activity {
 
         String weatherUrl = Constants.API_SERVER
                 +"city="+weatherId
-                +"&"+Constants.APP_KEY ;
+                +"&key="+Constants.APP_KEY ;
 
         Log.d(TAG,"weatherUrl " + weatherUrl ) ;
 
@@ -332,5 +332,4 @@ public class WeatherActivity extends Activity {
             }
         });
     }
-
 }
